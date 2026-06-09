@@ -18,11 +18,28 @@ const DEFAULT_DURATIONS: Durations = {
 }
 
 function App() {
-  const [mode, setMode] = useState<Mode>('focus')
-  const [durations, setDurations] = useState<Durations>(DEFAULT_DURATIONS)
-  const [timeRemaining, setTimeRemaining] = useState(DEFAULT_DURATIONS.focus * 60)
+  const [mode, setMode] = useState<Mode>(
+    () => (localStorage.getItem('pomo-mode') as Mode) ?? 'focus'
+  )
+  const [durations, setDurations] = useState<Durations>(() => {
+    const saved = localStorage.getItem('pomo-durations')
+    return saved ? (JSON.parse(saved) as Durations) : DEFAULT_DURATIONS
+  })
+  const [timeRemaining, setTimeRemaining] = useState(() => {
+    const saved = localStorage.getItem('pomo-time')
+    return saved ? parseInt(saved) : DEFAULT_DURATIONS.focus * 60
+  })
   const [isRunning, setIsRunning] = useState(false)
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessions, setSessions] = useState<Session[]>(() => {
+    const saved = localStorage.getItem('pomo-sessions')
+    return saved ? (JSON.parse(saved) as Session[]) : []
+  })
+
+  // Persist state to localStorage
+  useEffect(() => { localStorage.setItem('pomo-mode', mode) }, [mode])
+  useEffect(() => { localStorage.setItem('pomo-durations', JSON.stringify(durations)) }, [durations])
+  useEffect(() => { localStorage.setItem('pomo-time', String(timeRemaining)) }, [timeRemaining])
+  useEffect(() => { localStorage.setItem('pomo-sessions', JSON.stringify(sessions)) }, [sessions])
 
   // Countdown: runs every second while the timer is active
   useEffect(() => {
